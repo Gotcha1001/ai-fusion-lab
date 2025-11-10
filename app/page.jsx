@@ -21,10 +21,11 @@
 
 
 "use client"
-import { Button } from "@/components/ui/button";
+
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { Sparkles, Zap, MessageSquare, Cpu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const { setTheme } = useTheme();
@@ -40,7 +41,7 @@ export default function Home() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants = /** @type {any} */ ({
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
@@ -50,7 +51,7 @@ export default function Home() {
         stiffness: 100,
       },
     },
-  };
+  });
 
   const floatingVariants = {
     animate: {
@@ -71,10 +72,10 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-radial from-purple-900 via-indigo-900 to-black relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-[radial-gradient(ellipse_at_center,#581c87_0%,#312e81_50%,#000000_100%)] dark:bg-black">
       {/* Animated background circles */}
       <motion.div
-        className="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20"
+        className="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-50 dark:opacity-0"
         animate={{
           scale: [1, 1.2, 1],
           x: [0, 50, 0],
@@ -86,7 +87,7 @@ export default function Home() {
         }}
       />
       <motion.div
-        className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20"
+        className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-50 dark:opacity-0"
         animate={{
           scale: [1, 1.3, 1],
           x: [0, -50, 0],
@@ -133,7 +134,7 @@ export default function Home() {
         {/* Heading */}
         <motion.h1
           variants={itemVariants}
-          className="text-5xl md:text-7xl font-bold text-center mb-6 bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 bg-clip-text text-transparent"
+          className="text-5xl md:text-7xl font-bold text-center mb-6 bg-linear-to-r from-purple-500 via-pink-500 to-indigo-300 bg-clip-text text-transparent"
         >
           AI Fusion Lab
         </motion.h1>
@@ -157,7 +158,7 @@ export default function Home() {
         <motion.div variants={itemVariants}>
           <Button
             size="lg"
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-6 text-lg font-semibold shadow-2xl shadow-purple-500/50 transition-all duration-300"
+            className="bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-6 text-lg font-semibold shadow-2xl shadow-purple-500/50 transition-all duration-300"
           >
             Get Started Free
             <Sparkles className="ml-2 w-5 h-5" />
