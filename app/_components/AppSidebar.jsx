@@ -17,7 +17,7 @@ export function AppSidebar() {
         <Sidebar>
             <SidebarHeader>
                 <div className="p-3">
-                    <div className="flex justify-between item-center gap-1">
+                    <div className="flex justify-between items-center gap-1">
                         <div className="">
                             <Image src={"/1.jpg"} alt="Logo" height={200} width={200} className="rounded-lg" />
                         </div>  <div>
@@ -37,7 +37,7 @@ export function AppSidebar() {
                 <SidebarGroup>
                     <div className="p-3">
                         <h2 className="font-bold text-lg">Chat</h2>
-                        <p className="text-sm text-gray-400">Sign in to start chating with multiple AI Models</p>
+                        <p className="text-sm text-gray-400">Sign in to start chatting with multiple AI Models</p>
                     </div>
 
                 </SidebarGroup>
