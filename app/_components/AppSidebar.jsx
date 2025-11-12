@@ -7,12 +7,16 @@ import {
     SidebarGroup,
     SidebarHeader,
 } from "@/components/ui/sidebar"
-import { Moon, Sun } from "lucide-react"
+import { SignInButton, useUser } from "@clerk/nextjs"
+import { Bolt, Moon, Sun, User2, Zap } from "lucide-react"
 import { useTheme } from "next-themes"
 import Image from "next/image"
+import UsageCreditProgress from "./UsageCreditProgress"
 
 export function AppSidebar() {
     const { theme, setTheme } = useTheme()
+
+    const { user } = useUser()
     return (
         <Sidebar>
             <SidebarHeader>
@@ -28,7 +32,12 @@ export function AppSidebar() {
                                     variant="ghost"><Moon className="text-yellow-400" /></Button>}
                         </div>
                     </div>
-                    <Button size={"lg"} variant={"work"} className="mt-7 w-full">+ New Chat</Button>
+                    {user ? <Button size={"lg"} variant={"work"} className="mt-7 w-full">+ New Chat</Button>
+                        :
+                        <SignInButton>
+                            <Button size={"lg"} variant={"work"} className="mt-7 w-full">+ New Chat</Button>
+                        </SignInButton>
+                    }
                 </div>
 
 
@@ -37,7 +46,7 @@ export function AppSidebar() {
                 <SidebarGroup>
                     <div className="p-3">
                         <h2 className="font-bold text-lg">Chat</h2>
-                        <p className="text-sm text-gray-400">Sign in to start chatting with multiple AI Models</p>
+                        {!user && <p className="text-sm text-gray-400">Sign in to start chatting with multiple AI Models</p>}
                     </div>
 
                 </SidebarGroup>
@@ -45,7 +54,18 @@ export function AppSidebar() {
             </SidebarContent>
             <SidebarFooter>
                 <div className="p-3 mb-10">
-                    <Button variant={"work2"} className={"w-full"} size={"lg"}>Sign In/Sign Up</Button>
+                    {!user ? <SignInButton mode="modal">
+                        <Button variant={"work2"} className={"w-full"} size={"lg"}>Sign In/Sign Up</Button>
+                    </SignInButton>
+                        :
+                        <div>
+                            <UsageCreditProgress />
+                            <Button className={"w-full mb-3"}><Zap />Upgrade Plan</Button>
+                            <Button className="flex w-full"><User2 /><h2>Settings</h2></Button>
+                        </div>
+
+                    }
+
                 </div>
             </SidebarFooter>
         </Sidebar>
