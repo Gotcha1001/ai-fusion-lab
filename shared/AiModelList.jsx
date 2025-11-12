@@ -2,7 +2,7 @@ export default [
     {
         model: "GPT",
         icon: "/gpt.png",
-        premium: true,
+        premium: false,
         enable: true,
         subModel: [
             { name: "GPT 3.5", premium: false, id: "gpt-3.5" },
