@@ -27,10 +27,10 @@ function AiMultiModels() {
     return (
         <div className='flex flex-1 h-[75vh] border-b bg-radial from-purple-500 to-indigo-950 rounded-lg'>
             {aiModelList.map((model, index) => (
-                <div className={`flex flex-col border-r h-full overflow-auto 
+                <div key={index} className={`flex flex-col border-r h-full overflow-auto 
                 ${model.enable ? 'flex-1 min-w-[400px]' : "w-[100px] flex-none"}
                 `}>
-                    <div className='flex w-full h-[70px] items-center justify-between border-b p-4 bg-radial from-purple-500 to-indigo-950 rounded-lg' key={index}>
+                    <div className='flex w-full h-[70px] items-center justify-between border-b p-4 bg-radial from-purple-500 to-indigo-950 rounded-b-lg' key={index}>
                         <div className='flex items-center gap-4'>
                             <Image src={model.icon} alt='Logo' width={24} height={24} />
 
