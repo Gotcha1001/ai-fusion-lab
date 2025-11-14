@@ -342,11 +342,14 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/config/FirebaseConfig'
 import remarkGfm from 'remark-gfm'
 import ReactMarkdown from 'react-markdown'
+import { useSearchParams } from 'next/navigation'
 
 function AiMultiModels() {
     const [aiModelList, setAiModelList] = useState(AiModelList)
     const { messages, setMessages, aiSelectedModels, setAiSelectedModels } = useContext(AiSelectedModelContext)
     const { user } = useUser()
+
+
 
     // ✅ Enable models that are in aiSelectedModels by default
     useEffect(() => {
@@ -499,14 +502,14 @@ function AiMultiModels() {
                                         </span>
                                     )}
                                     <div className='flex gap-3 items-center'>
-                                        {m.content === 'loading' ? (
+                                        {m?.content === 'loading' ? (
                                             <>
                                                 <Loader className='animate-spin h-4 w-4' />
                                                 <span className="text-sm">Thinking...</span>
                                             </>
                                         ) : (
                                             <ReactMarkdown className='whitespace-pre-wrap' remarkPlugins={[remarkGfm]}>
-                                                {m.content}
+                                                {m?.content}
                                             </ReactMarkdown>
 
                                         )}
