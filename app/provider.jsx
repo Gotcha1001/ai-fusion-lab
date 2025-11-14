@@ -117,10 +117,11 @@ function Provider({ children, ...props }) {
     }, [user])
 
     useEffect(() => {
-        if (aiSelectedModels) {
+        // ✅ Only update if user is loaded AND models have changed
+        if (aiSelectedModels && user?.primaryEmailAddress?.emailAddress) {
             updateAIModelSelectionPref()
         }
-    }, [aiSelectedModels])
+    }, [aiSelectedModels, user])
 
     const updatedModels = { ...aiSelectedModels };
 
