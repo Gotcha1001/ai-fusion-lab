@@ -1,20 +1,45 @@
+// "use client"
+// import { Button } from "@/components/ui/button";
+// import { useTheme } from "next-themes";
+// import Image from "next/image";
+// import ChatInputBox from "./_components/ChatInputBox";
+
+// export default function Home() {
+
+//   const { setTheme } = useTheme()
+
+//   return (
+//     <div className="">
+//       <ChatInputBox />
+//     </div>
+//   )
+// }
+
+
+
 "use client"
+
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import ChatInputBox from "./_components/ChatInputBox";
+import ChatInputBox from ".//_components/ChatInputBox";
+import { Suspense } from "react";
 
 export default function Home() {
-
   const { setTheme } = useTheme()
 
   return (
     <div className="">
-      <ChatInputBox />
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        </div>
+      }>
+        <ChatInputBox />
+      </Suspense>
     </div>
   )
 }
-
 
 
 // "use client"
