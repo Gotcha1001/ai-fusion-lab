@@ -418,7 +418,7 @@
 
 "use client"
 
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Sidebar,
@@ -438,6 +438,8 @@ import moment from "moment/moment"
 import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import axios from "axios"
+import { AiSelectedModelContext } from "@/context/AiSelectedModelContext"
 
 export function AppSidebar() {
     const { theme, setTheme } = useTheme()
@@ -445,6 +447,9 @@ export function AppSidebar() {
     const router = useRouter()
 
     const [chatHistory, setChatHistory] = useState([])
+    const [freeMsgCount, setFreeMsgCount] = useState(0)
+
+    const { messages, setMessages, aiSelectedModels } = useContext(AiSelectedModelContext)
 
     useEffect(() => {
         if (!user?.primaryEmailAddress?.emailAddress) {
@@ -465,8 +470,13 @@ export function AppSidebar() {
         }, (err) => {
             console.error("Chat history error:", err)
         })
+        // user && GetRemainingTokenMsgs()
         return () => unsubscribe() // cleanup
     }, [user])
+
+    useEffect(() => {
+        GetRemainingTokenMsgs()
+    }, [messages])
 
     const [mounted, setMounted] = useState(false)
     useEffect(() => setMounted(true), [])
@@ -491,6 +501,13 @@ export function AppSidebar() {
     const handleNewChat = () => {
         // Navigate to home without chatId parameter to start fresh
         router.push('/')
+    }
+
+    const GetRemainingTokenMsgs = async () => {
+
+        const result = await axios.get('/api/user-remaining-msg')
+        console.log("🍄TOKENS:", result)
+        setFreeMsgCount(result.data?.remainingToken)
     }
 
 
@@ -578,7 +595,7 @@ export function AppSidebar() {
                         </SignInButton>
                     ) : (
                         <div>
-                            <UsageCreditProgress />
+                            <UsageCreditProgress remainingToken={freeMsgCount} />
                             <Button className={"w-full mb-3"}>
                                 <Zap />
                                 Upgrade Plan
