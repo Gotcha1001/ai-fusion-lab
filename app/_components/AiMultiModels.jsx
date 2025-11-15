@@ -321,7 +321,7 @@
 
 
 
-import AiModelList from '@/shared/AiModelList'
+
 import Image from 'next/image'
 import React, { useContext, useEffect, useState } from 'react'
 import {
@@ -343,6 +343,7 @@ import { db } from '@/config/FirebaseConfig'
 import remarkGfm from 'remark-gfm'
 import ReactMarkdown from 'react-markdown'
 import { useSearchParams } from 'next/navigation'
+import AiModelList from '@/shared/AiModelList'
 
 function AiMultiModels() {
     const [aiModelList, setAiModelList] = useState(AiModelList)
@@ -493,7 +494,7 @@ function AiMultiModels() {
                             {messages[model.model]?.map((m, i) => (
                                 <div key={i}
                                     className={`p-3 rounded-md ${m.role === 'user'
-                                        ? "bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100"
+                                        ? "bg-blue-100 dark:bg-radial from-blue-900 to-indigo-900 text-blue-900 dark:text-blue-100"
                                         : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                         }`}>
                                     {m.role === 'assistant' && (
