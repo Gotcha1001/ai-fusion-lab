@@ -427,7 +427,7 @@ import {
     SidebarGroup,
     SidebarHeader,
 } from "@/components/ui/sidebar"
-import { SignInButton, useUser } from "@clerk/nextjs"
+import { SignInButton, useAuth, useUser } from "@clerk/nextjs"
 import { Bolt, Moon, Sun, User2, Zap } from "lucide-react"
 import { useTheme } from "next-themes"
 import Image from "next/image"
@@ -440,11 +440,17 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import { AiSelectedModelContext } from "@/context/AiSelectedModelContext"
+import PricingModal from "./PricingModal"
+
 
 export function AppSidebar() {
     const { theme, setTheme } = useTheme()
     const { user } = useUser()
     const router = useRouter()
+
+
+    const { has } = useAuth()
+
 
     const [chatHistory, setChatHistory] = useState([])
     const [freeMsgCount, setFreeMsgCount] = useState(0)
@@ -572,11 +578,11 @@ export function AppSidebar() {
                                     <h2 className="text-sm text-gray-500 text-center capitalize">
                                         {GetLastUserMessageFromChat(chat).lastMsgDate}
                                     </h2>
-                                    <Separator className="my-3" />
-                                    <h2 className="text-lg p-2 rounded-lg hover:bg-radial from-purple-500 to-indigo-900 cursor-pointer line-clamp-1">
+                                    <Separator className="my-2" />
+                                    <h2 className="text-lg p-2 rounded-lg hover:bg-radial from-purple-500 to-indigo-950 cursor-pointer line-clamp-1 bg-purple-700">
                                         {GetLastUserMessageFromChat(chat).message}
                                     </h2>
-                                    <Separator className="my-3" />
+                                    <Separator className="" />
                                 </Link>
 
                             </div>
@@ -595,11 +601,20 @@ export function AppSidebar() {
                         </SignInButton>
                     ) : (
                         <div>
-                            <UsageCreditProgress remainingToken={freeMsgCount} />
-                            <Button className={"w-full mb-3"}>
-                                <Zap />
-                                Upgrade Plan
-                            </Button>
+                            {!has({ plan: 'unlimited_plan' }) &&
+
+                                <div>
+                                    <UsageCreditProgress remainingToken={freeMsgCount} />
+                                    <PricingModal>
+                                        <Button className={"w-full mb-3"}>
+                                            <Zap />
+                                            Upgrade Plan
+                                        </Button>
+
+                                    </PricingModal>
+                                </div>
+                            }
+
                             <Button className="flex w-full">
                                 <User2 />
                                 <h2>Settings</h2>
