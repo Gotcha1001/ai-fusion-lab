@@ -614,11 +614,14 @@ export function AppSidebar() {
                                     </PricingModal>
                                 </div>
                             }
+                            <Link href={'/settings'}>
+                                <Button className="flex w-full">
 
-                            <Button className="flex w-full">
-                                <User2 />
-                                <h2>Settings</h2>
-                            </Button>
+                                    <User2 />
+                                    <h2>Settings</h2>
+
+                                </Button>
+                            </Link>
                         </div>
                     )}
                 </div>

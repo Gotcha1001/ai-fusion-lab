@@ -12,7 +12,7 @@ import { PricingTable } from '@clerk/nextjs'
 function PricingModal({ children }) {
     return (
         <Dialog>
-            <DialogTrigger clasName="w-full">
+            <DialogTrigger asChild>
                 <div className='w-full'>
                     {children}
                 </div>
