@@ -337,7 +337,7 @@ import { Switch } from "@/components/ui/switch"
 import { Loader, Lock, LockIcon, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AiSelectedModelContext } from '@/context/AiSelectedModelContext'
-import { useUser } from '@clerk/nextjs'
+import { useAuth, useUser } from '@clerk/nextjs'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/config/FirebaseConfig'
 import remarkGfm from 'remark-gfm'
@@ -349,8 +349,7 @@ function AiMultiModels() {
     const [aiModelList, setAiModelList] = useState(AiModelList)
     const { messages, setMessages, aiSelectedModels, setAiSelectedModels } = useContext(AiSelectedModelContext)
     const { user } = useUser()
-
-
+    const { has } = useAuth()
 
     // ✅ Enable models that are in aiSelectedModels by default
     useEffect(() => {
@@ -429,99 +428,106 @@ function AiMultiModels() {
             }).catch(err => console.error("Firebase update error:", err));
         }
     }
-
     return (
         <div className='flex flex-1 h-[75vh] border-b bg-radial from-purple-500 to-indigo-950 rounded-lg overflow-x-auto'>
-            {aiModelList.map((model, index) => (
-                <div key={index} className={`flex flex-col border-r h-full overflow-auto
+            {aiModelList.map((model, index) => {
+                // ✅ Calculate if the selected sub-model is premium
+                const selectedSubModelId = aiSelectedModels[model.model]?.modelId;
+                const selectedSubModel = model.subModel.find(sm => sm.id === selectedSubModelId);
+                const isSelectedModelPremium = model.premium || selectedSubModel?.premium;
+                const canShowMessages = !isSelectedModelPremium || has?.({ plan: 'unlimited_plan' });
+
+                return (
+                    <div key={index} className={`flex flex-col border-r h-full overflow-auto
                 ${model.enable ? 'flex-1 min-w-[400px]' : "w-[100px] flex-none"}
                 `}>
-                    <div className='flex w-full h-[70px] items-center justify-between border-b p-4 bg-radial from-purple-500 to-indigo-950 rounded-b-lg'>
-                        <div className='flex items-center gap-4'>
-                            <Image src={model.icon} alt='Logo' width={26} height={26} />
-                            {model.enable &&
-                                <Select
-                                    disabled={model.premium}
-                                    onValueChange={(value) => onSelectedValue(model.model, value)}
-                                    defaultValue={aiSelectedModels?.[model.model]?.modelId ?? ""} >
-                                    <SelectTrigger className="w-[180px] text-black dark:text-white">
-                                        <SelectValue placeholder={aiSelectedModels?.[model.model]?.modelId ?? "Select a model"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup className="px-3">
-                                            <SelectLabel>Free</SelectLabel>
-                                            {model.subModel.map((subModel, index) => subModel.premium === false && (
-                                                <SelectItem key={index} value={subModel.id}>{subModel.name}</SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                        <SelectGroup className="px-3">
-                                            <SelectLabel>Premium</SelectLabel>
-                                            {model.subModel.map((subModel, index) => subModel.premium === true && (
-                                                <SelectItem key={index} value={subModel.name} disabled={subModel.premium}>
-                                                    {subModel.name} {subModel.premium && <Lock className='h-4 w-4' />}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>}
+                        <div className='flex w-full h-[70px] items-center justify-between border-b p-4 bg-radial from-purple-500 to-indigo-950 rounded-b-lg'>
+                            <div className='flex items-center gap-4'>
+                                <Image src={model.icon} alt='Logo' width={26} height={26} />
+                                {model.enable && aiSelectedModels[model.model]?.enable &&
+                                    <Select
+                                        disabled={model.premium && !has?.({ plan: 'unlimited_plan' })}
+                                        onValueChange={(value) => onSelectedValue(model.model, value)}
+                                        defaultValue={aiSelectedModels?.[model.model]?.modelId ?? ""} >
+                                        <SelectTrigger className="w-[180px] text-black dark:text-white">
+                                            <SelectValue placeholder={aiSelectedModels?.[model.model]?.modelId ?? "Select a model"} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup className="px-3">
+                                                <SelectLabel>Free</SelectLabel>
+                                                {model.subModel.map((subModel, index) => subModel.premium === false && (
+                                                    <SelectItem key={index} value={subModel.id}>{subModel.name}</SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                            <SelectGroup className="px-3">
+                                                <SelectLabel>Premium</SelectLabel>
+                                                {model.subModel.map((subModel, index) => subModel.premium === true && (
+                                                    <SelectItem key={index} value={subModel.name} disabled={subModel.premium}>
+                                                        {subModel.name} {subModel.premium && <Lock className='h-4 w-4' />}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>}
+                            </div>
+                            <div>
+                                {model.enable ?
+                                    <Switch
+                                        checked={model.enable}
+                                        disabled={!has?.({ plan: 'unlimited_plan' }) && model.premium}
+                                        onCheckedChange={(v) => onToggleChange(model.model, v)}
+                                    />
+                                    :
+                                    <MessageSquare
+                                        onClick={() => onToggleChange(model.model, true)}
+                                        className="cursor-pointer hover:text-blue-500"
+                                    />
+                                }
+                            </div>
                         </div>
-                        <div>
-                            {model.enable ?
-                                <Switch
-                                    checked={model.enable}
-                                    onCheckedChange={(v) => onToggleChange(model.model, v)}
-                                />
-                                :
-                                <MessageSquare
-                                    onClick={() => onToggleChange(model.model, true)}
-                                    className="cursor-pointer hover:text-blue-500"
-                                />
-                            }
-                        </div>
-                    </div>
 
-                    {model.premium && model.enable && (
-                        <div className='flex items-center justify-center h-full'>
-                            <Button>
-                                <LockIcon />
-                                Upgrade to unlock
-                            </Button>
-                        </div>
-                    )}
+                        {!canShowMessages && model.enable && (
+                            <div className='flex items-center justify-center h-full'>
+                                <Button>
+                                    <LockIcon />
+                                    Upgrade to unlock
+                                </Button>
+                            </div>
+                        )}
 
-                    {model.enable && <div className='flex-1 p-4 overflow-y-auto'>
-                        <div className='space-y-2'>
-                            {messages[model.model]?.map((m, i) => (
-                                <div key={i}
-                                    className={`p-3 rounded-md ${m.role === 'user'
-                                        ? "bg-blue-100 dark:bg-radial from-blue-900 to-indigo-900 text-blue-900 dark:text-blue-100"
-                                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                                        }`}>
-                                    {m.role === 'assistant' && (
-                                        <span className='text-xs text-gray-600 dark:text-gray-400 font-semibold block mb-1'>
-                                            {m.model ?? model.model}
-                                        </span>
-                                    )}
-                                    <div className='flex gap-3 items-center'>
-                                        {m?.content === 'loading' ? (
-                                            <>
-                                                <Loader className='animate-spin h-4 w-4' />
-                                                <span className="text-sm">Thinking...</span>
-                                            </>
-                                        ) : (
-                                            <ReactMarkdown className='whitespace-pre-wrap' remarkPlugins={[remarkGfm]}>
-                                                {m?.content}
-                                            </ReactMarkdown>
-
-                                        )}
-                                    </div>
+                        {model.enable && aiSelectedModels[model.model]?.enable && canShowMessages &&
+                            <div className='flex-1 p-4 overflow-y-auto'>
+                                <div className='space-y-2'>
+                                    {messages[model.model]?.map((m, i) => (
+                                        <div key={i}
+                                            className={`p-3 rounded-md ${m.role === 'user'
+                                                ? "bg-blue-100 dark:bg-radial from-blue-900 to-indigo-900 text-blue-900 dark:text-blue-100"
+                                                : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                                }`}>
+                                            {m.role === 'assistant' && (
+                                                <span className='text-xs text-gray-600 dark:text-gray-400 font-semibold block mb-1'>
+                                                    {m.model ?? model.model}
+                                                </span>
+                                            )}
+                                            <div className='flex gap-3 items-center'>
+                                                {m?.content === 'loading' ? (
+                                                    <>
+                                                        <Loader className='animate-spin h-4 w-4' />
+                                                        <span className="text-sm">Thinking...</span>
+                                                    </>
+                                                ) : (
+                                                    <ReactMarkdown className='whitespace-pre-wrap' remarkPlugins={[remarkGfm]}>
+                                                        {m?.content}
+                                                    </ReactMarkdown>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                    </div>}
-
-                </div>
-            ))}
+                            </div>}
+                    </div>
+                );
+            })}
         </div>
     )
 }

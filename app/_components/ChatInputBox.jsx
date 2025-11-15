@@ -12,7 +12,7 @@ import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '@/config/FirebaseConfig'
-import { useUser } from '@clerk/nextjs'
+import { useAuth, useUser } from '@clerk/nextjs'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -24,6 +24,9 @@ function ChatInputBox() {
     const { user } = useUser()
     const params = useSearchParams()
     const router = useRouter()
+
+    const { has } = useAuth()
+
 
     useEffect(() => {
         const chatId_ = params.get('chatId')
@@ -46,23 +49,24 @@ function ChatInputBox() {
     const handleSend = async () => {
         if (!userInput?.trim()) return;
 
-        //Only call if the user is a free user .... 
-        //Deduct and check token limit✅
-        const result = await axios.post('/api/user-remaining-msg', {
-            token: 1
-        })
-        const remainingToken = result?.data?.remainingToken;
-
-        if (remainingToken <= 0) {
-            console.log("Limit exceeded")
-            toast.error("Maximum Daily Limit Exceeded")
-            return
-        }
-
         // ✅ Guard if aiSelectedModels not ready
         if (!aiSelectedModels || Object.keys(aiSelectedModels).length === 0) {
             console.warn("⚠️ aiSelectedModels not ready yet");
             return;
+        }
+
+        // ✅ Check token limit ONLY for free users
+        if (!has?.({ plan: 'unlimited_plan' })) {
+            const result = await axios.post('/api/user-remaining-msg', {
+                token: 1
+            })
+            const remainingToken = result?.data?.remainingToken;
+
+            if (remainingToken <= 0) {
+                console.log("Limit exceeded")
+                toast.error("Maximum Daily Limit Exceeded")
+                return
+            }
         }
 
         const currentInput = userInput.trim();
@@ -132,41 +136,28 @@ function ChatInputBox() {
 
         try {
             const results = await Promise.all(requestPromises);
-            console.log("📥 All responses received:", results);
 
-            // 4️⃣ Update messages with real responses
+            // 4️⃣ Update messages with actual AI responses
             setMessages((prev) => {
                 const updated = { ...prev };
 
-                results.forEach(({ parentModel, aiResponse, model, error }) => {
-                    const modelMessages = updated[parentModel] ?? [];
+                results.forEach((result) => {
+                    const parentModel = result.parentModel || result.model;
 
-                    // Find and replace the loading message
-                    const lastLoadingIndex = modelMessages.reduce((lastIdx, msg, idx) =>
-                        msg.role === 'assistant' && msg.content === 'loading' ? idx : lastIdx, -1
-                    );
+                    if (updated[parentModel]) {
+                        // Remove the loading message (last item) and add the real response
+                        const messagesWithoutLoading = updated[parentModel].slice(0, -1);
 
-                    if (lastLoadingIndex !== -1) {
                         updated[parentModel] = [
-                            ...modelMessages.slice(0, lastLoadingIndex),
+                            ...messagesWithoutLoading,
                             {
                                 role: "assistant",
-                                content: aiResponse,
-                                model: model ?? parentModel,
-                                loading: false,
-                            },
-                            ...modelMessages.slice(lastLoadingIndex + 1),
-                        ];
-                    } else {
-                        // Fallback: append if loading wasn't found
-                        updated[parentModel] = [
-                            ...modelMessages,
-                            {
-                                role: "assistant",
-                                content: aiResponse,
-                                model: model ?? parentModel,
-                                loading: false,
-                            },
+                                content: result.error
+                                    ? (result.aiResponse || "⚠️ Failed to get response")
+                                    : (result.aiResponse || "No response"),
+                                model: parentModel,
+                                loading: false
+                            }
                         ];
                     }
                 });
@@ -174,8 +165,32 @@ function ChatInputBox() {
                 return updated;
             });
 
+            console.log("✅ All responses received and updated");
+
         } catch (err) {
             console.error("❌ Bulk request failed:", err);
+
+            // Handle error: Replace loading with error message
+            setMessages((prev) => {
+                const updated = { ...prev };
+
+                Object.keys(aiSelectedModels).forEach((modelKey) => {
+                    if (aiSelectedModels[modelKey].enable && updated[modelKey]) {
+                        const messagesWithoutLoading = updated[modelKey].slice(0, -1);
+                        updated[modelKey] = [
+                            ...messagesWithoutLoading,
+                            {
+                                role: "assistant",
+                                content: "⚠️ Failed to get response. Please try again.",
+                                model: modelKey,
+                                loading: false
+                            }
+                        ];
+                    }
+                });
+
+                return updated;
+            });
         }
     };
 
